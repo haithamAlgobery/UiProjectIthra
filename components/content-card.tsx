@@ -38,6 +38,7 @@ import useDataBasic from "@/src/hooks/useDataBasic";
 import useAuth from "@/src/hooks/useAuth";
 import { useDispatch } from "react-redux";
 import { addView } from "../src/features/viewSlice";
+import { useLoading } from "@/app/providers/LoadingProvider";
 
 interface ContentCardProps {
   content: Content;
@@ -50,7 +51,7 @@ export function ContentCard({ content, onInteract, onDelete }: ContentCardProps)
   const router = useRouter();
   const { urlRoot } = useDataBasic();
   const { isAuth, user } = useAuth();
-
+  const { setLoading } = useLoading();
   const item = (content as any).content ?? content;
 
 
@@ -117,6 +118,7 @@ export function ContentCard({ content, onInteract, onDelete }: ContentCardProps)
   // Prevent card click when clicking inner controls
   const handleCardClick = (e?: React.MouseEvent) => {
     // If event passed, it's already handled; otherwise just navigate
+    setLoading(true);
     router.push(`/content/${item?.id}`);
   };
 
@@ -124,6 +126,7 @@ export function ContentCard({ content, onInteract, onDelete }: ContentCardProps)
   const goToProfile = (e: React.MouseEvent, username?: string) => {
     e.stopPropagation();
     if (!username) return;
+    setLoading(true);
     router.push(`/profile/${username}`);
   };
 
@@ -133,9 +136,7 @@ export function ContentCard({ content, onInteract, onDelete }: ContentCardProps)
     try {
       const href = typeof window !== "undefined" ? window.location.href : "";
       await navigator.clipboard.writeText(href || `${location.origin}/content/${item?.id}`);
-      // you can replace with toast or feedback if your UI has one
-      // simple alert for now:
-      // alert("تم نسخ الرابط");
+   
     } catch {
       // ignore for now
     }
@@ -164,12 +165,14 @@ export function ContentCard({ content, onInteract, onDelete }: ContentCardProps)
 
     e.stopPropagation();
     if (!item?.id) return;
+    setLoading(true);
     router.push(`/report/${item.id}`);
   }
   const handleEdit=(e: React.MouseEvent, username?: string) => {
 
     e.stopPropagation();
     if (!item?.id) return;
+    setLoading(true);
     router.push(`/edit/${item.id}`);
   }
   

@@ -51,8 +51,8 @@ import { Navbar2 } from "@/components/Navbar2"
 
 import { downloadFile } from "@/src/features/file"
 import RelatedFeed from "@/components/related-feed"
-const urlRoot = "https://localhost:7021"
-const IMG_BASE = urlRoot + "/UpLoadFileContent"
+import { useLoading } from "@/app/providers/LoadingProvider"
+import useDataBasic from "@/src/hooks/useDataBasic";
 
 function getRelativeTime(dateString) {
   const date = new Date(dateString)
@@ -64,6 +64,7 @@ function getRelativeTime(dateString) {
   const diffDay = Math.floor(diffHour / 24)
   const diffMonth = Math.floor(diffDay / 30)
   const diffYear = Math.floor(diffDay / 365)
+
 
   if (diffSec < 60) return "الآن"
   if (diffMin < 60) return `منذ ${diffMin} ${diffMin === 1 ? "دقيقة" : "دقائق"}`
@@ -157,6 +158,8 @@ export default function ContentDetailPageClient({ params }) {
   const focus = searchParams?.get("focus") || null
 
   const { isAuth, user } = useAuth()
+  const { urlRoot} = useDataBasic();
+const IMG_BASE = urlRoot + "/UpLoadFileContent"
 
   const { content, loading, error } = useSelector(
     (s) => s.viewContent || { content: null, loading: false, error: null },
@@ -174,7 +177,7 @@ export default function ContentDetailPageClient({ params }) {
   const [toastMessage, setToastMessage] = useState(null)
 
   const [isMediaOpen, setIsMediaOpen] = useState(false)
-
+  const { setLoading } = useLoading();
   useEffect(() => {
     if (!contentId) return
     dispatch(fetchContentFull({ contentId }))
@@ -238,7 +241,9 @@ export default function ContentDetailPageClient({ params }) {
     if (!contentIdParam) return
 
     if (!isAuth) {
-      router.push(`/auth/login?returnTo=/content/${contentIdParam}`)
+      
+            setLoading(true);
+      router.push(`/auth/start?returnTo=/content/${contentIdParam}`)
       return
     }
 
@@ -276,7 +281,8 @@ export default function ContentDetailPageClient({ params }) {
 
   const handlePostComment = async () => {
     if (!isAuth) {
-      router.push(`/auth/login?returnTo=/content/${contentId}`)
+      setLoading(true);
+      router.push(`/auth/start?returnTo=/content/${contentId}`)
       return
     }
     const trimmed = (commentText || "").trim()
@@ -339,14 +345,7 @@ export default function ContentDetailPageClient({ params }) {
     }
   }
 
-  const handleReport = async () => {
-    if (!confirm("هل تريد الإبلاغ عن هذا المحتوى؟")) return
-    setReporting(true)
-    setTimeout(() => {
-      setReporting(false)
-      setToastMessage("تم إرسال البلاغ. شكرًا لتعاونك")
-    }, 800)
-  }
+ 
 
   const [downloading, setDownloading] = useState(false)
 
@@ -462,6 +461,7 @@ export default function ContentDetailPageClient({ params }) {
 
             <div className="p-6 sm:p-8">
               <div className="flex items-start justify-between gap-4 mb-6 pb-6 border-b border-slate-200/50 dark:border-slate-700/50">
+                <button  style={{cursor:"pointer"}}  onClick={() =>{ setLoading(true);router.push(`/profile/${userShort.userName}`);}}  >
                 <div className="flex items-center gap-4 flex-1">
                   <Avatar className="h-14 w-14 ring-2 ring-white/50 dark:ring-slate-700/50 shadow-lg">
                     <AvatarImage src={urlRoot + "/UploadFile/" + (userShort?.urlImage || "")} />
@@ -476,6 +476,7 @@ export default function ContentDetailPageClient({ params }) {
                     <div className="text-sm text-muted-foreground">@{userShort.userName}</div>
                   </div>
                 </div>
+                </button>
 
                 <div className="relative">
                   <button
@@ -501,7 +502,9 @@ export default function ContentDetailPageClient({ params }) {
                         </button>
                         <button
                           onClick={() => {
-                            handleReport()
+                           setLoading(true);
+
+                            router.push(`/report/${c.id}`);
                             setShowMenu(false)
                           }}
                           className="w-full text-right px-4 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-3 text-foreground"
@@ -514,7 +517,8 @@ export default function ContentDetailPageClient({ params }) {
                             <div className="my-1 border-t border-border" />
                             <button
                               onClick={() => {
-                                router.push(`/content/${c.id}/edit`)
+                                setLoading(true);
+                                router.push(`/edit/${c.id}`)
                                 setShowMenu(false)
                               }}
                               className="w-full text-right px-4 py-2.5 text-sm hover:bg-muted transition-colors text-foreground"
@@ -827,13 +831,15 @@ export default function ContentDetailPageClient({ params }) {
                           className="flex gap-4 p-5 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-slate-200/30 dark:border-slate-700/30 rounded-2xl hover:bg-white/70 dark:hover:bg-slate-800/70 transition-all duration-200 ring-1 ring-white/10 dark:ring-slate-700/20"
                         >
                        
-
+                    <button style={{cursor:"pointer"}}  onClick={() =>{ setLoading(true);router.push(`/profile/${cm.shortDetailsUser?.userName}`);}}  >
                    <Avatar className="h-11 w-11 ring-2 ring-border flex-shrink-0">
                     <AvatarImage src={urlRoot + "/UploadFile/" + (cm.shortDetailsUser?.urlImage || "")} />
                     <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
                       {(cm.shortDetailsUser?.firstName?.[0] || "ا").toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
+                    </button >
+
                           <div className="flex-1 min-w-0 space-y-2">
                             <div className="flex items-center justify-between gap-2">
                               <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -937,60 +943,4 @@ export default function ContentDetailPageClient({ params }) {
     </>
   )
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

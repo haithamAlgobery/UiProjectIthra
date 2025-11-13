@@ -15,14 +15,16 @@ import type { AppDispatch } from "@/src/store/store";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/src/store/store";
 import { createContent } from "@/src/features/content";
+import { useLoading } from "./providers/LoadingProvider";
+import useAuth from "@/src/hooks/useAuth";
 export default function HomePage() {
   const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
-
-  const dispatch = useDispatch<AppDispatch>();
+  const { setLoading } = useLoading();
+    const dispatch = useDispatch<AppDispatch>();
   const filters = useSelector((state: RootState) => state.filters);
-
+const {isAuth}=useAuth();
   useEffect(() => {
     dispatch(fetchCategories());
     dispatch(fetchSortOptions());
@@ -32,7 +34,7 @@ export default function HomePage() {
 
   const toggleSidebar = () => setIsSidebarOpen((s) => !s);
   const handleCreatePost = () => setIsPostModalOpen(true);
-  const handleCreateResearch = () => router.push("/research/create");
+  const handleCreateResearch = () => {setLoading(true); router.push("/research/create")};
 
   const handlePostSubmit = async (data: {
     title: string
@@ -63,7 +65,7 @@ export default function HomePage() {
         </main>
       </div>
 
-      <FloatingActionButton onCreatePost={handleCreatePost} onCreateResearch={handleCreateResearch} />
+      {isAuth &&<FloatingActionButton onCreatePost={handleCreatePost} onCreateResearch={handleCreateResearch} />}
       <PostModal isOpen={isPostModalOpen} onClose={() => setIsPostModalOpen(false)} onSubmit={handlePostSubmit} />
 
       {isSidebarOpen && <div className="fixed inset-0 bg-black/50 z-30 md:hidden" onClick={() => setIsSidebarOpen(false)} />}

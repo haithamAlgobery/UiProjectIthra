@@ -49,7 +49,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import useNotifications from "@/src/hooks/useNotifications";
-
+import { useLoading } from "@/app/providers/LoadingProvider";
 interface NavbarProps {
   onToggleSidebar: () => void;
   currentSort: string;
@@ -70,9 +70,10 @@ export function Navbar({ onToggleSidebar, currentSort, currentType }: NavbarProp
 const {unreadCount}=useNotifications();
   const [openLogoutDialog, setOpenLogoutDialog] = useState(false);
   const inputRef = useRef(null);
-  const handleLogin = () => router.push("/auth/login");
+  const handleLogin = () => {setLoading(true);router.push("/auth/start")};
   const handleSortClick = (value: string) => dispatch(setSort(value));
   const handleTypeClick = (value: string) => dispatch(setType(value));
+  const { setLoading } = useLoading();
   const handleSearch = (query = searchQuery) => {
     // إذا أردت تنظيف المسافات
     const normalized = (query || "").trim();
@@ -121,7 +122,7 @@ const {unreadCount}=useNotifications();
                     {/* أيقونة الإشعارات */}
       <div className="relative">
         <button
-          onClick={() => router.push("/notifications")}
+          onClick={() =>{setLoading(true); router.push("/notifications")}}
           className="relative flex items-center justify-center p-2 rounded-full hover:bg-accent/50 transition-all duration-200"
           aria-label="الإشعارات"
         >
@@ -163,7 +164,8 @@ const {unreadCount}=useNotifications();
                   {/* الجزء العلوي - اضغط عليه للانتقال لصفحة البروفايل */}
                   <div
                     className="flex items-center gap-2 p-2 cursor-pointer hover:bg-muted/10 rounded"
-                    onClick={() => router.push(`/profile/${user.userName ?? user.id}`)}
+                    onClick={() =>{setLoading(true);
+                       router.push(`/profile/${user.userName ?? user.id}`)}}
                   >
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={urlRoot + "/UploadFile/" + user.urlImage} />
@@ -187,17 +189,17 @@ const {unreadCount}=useNotifications();
                   </DropdownMenuItem>
 
                   {/* خيارات إضافية بعد تغيير الوضع */}
-                  <DropdownMenuItem onClick={() => router.push("/favorites")}>
+                  <DropdownMenuItem onClick={() =>{setLoading(true); router.push("/favorites")}}>
                     <Heart className="h-4 w-4 mr-2" />
                     المفضلات
                   </DropdownMenuItem>
 
-                  <DropdownMenuItem onClick={() => router.push("/notifications")}>
+                  <DropdownMenuItem onClick={() =>{setLoading(true); router.push("/notifications");}}>
                     <Bell className="h-4 w-4 mr-2" />
                     الإشعارات
                   </DropdownMenuItem>
 
-                  <DropdownMenuItem onClick={() => router.push("/account")}>
+                  <DropdownMenuItem onClick={() => {setLoading(true);router.push("/account")}}>
                     <Settings className="h-4 w-4 mr-2" />
                     حسابي
                   </DropdownMenuItem>
@@ -367,22 +369,25 @@ const {unreadCount}=useNotifications();
             >
               <Menu className="h-5 w-5" />
             </Button>
+            <button
+  style={{ cursor: "pointer" }}
+  onClick={() => {
+    setLoading(true);
+    router.push("/view");
+  }}
+  className="flex justify-center items-center py-2"
+>
+  {/* شعار الموقع فقط كصورة بحجم متوسط */}
+  <div className="w-28 sm:w-36 md:w-40">
+    <img
+      src={logo}
+      alt="شعار منصة إثراء"
+      className="w-full h-auto object-contain"
+    />
+  </div>
+</button>
 
-            <div className="flex items-center gap-3">
-              {/* شعار الموقع كصورة */}
-              <div className="h-8 w-8 rounded-lg overflow-hidden shadow-sm flex items-center justify-center bg-muted">
-                <img
-                  src={logo}
-                  alt="شعار الموقع"
-                  className="h-full w-full object-cover"
-                />
-              </div>
 
-              {/* اسم الموقع */}
-              <span className="font-bold text-lg text-balance hidden sm:inline bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
-                {webName}
-              </span>
-            </div>
           </div>
         </div>
       </div>

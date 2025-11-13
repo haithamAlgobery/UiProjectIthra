@@ -7,10 +7,11 @@ import "./globals.css"
 import {Providers} from "../src/store/providers"
 import SignalRProvider from "./providers/SignalRProvider";
 import { Toaster } from "react-hot-toast";
+import { LoadingProvider } from "./providers/LoadingProvider"
 export const metadata: Metadata = {
   title: "أثراء",
   description: "منصة مستقبلية لمشاركة المحتوى والأبحاث",
-  generator: "v0.app",
+  generator: "logoA.png",
 }
 
 export default function RootLayout({
@@ -29,8 +30,9 @@ export default function RootLayout({
           position="top-right"
           toastOptions={{ duration: 5000 }}
         />
+          <LoadingProvider>
             <div className="gradient-bg min-h-screen">{children}</div>
-
+            </LoadingProvider>
           </Suspense>
           </Providers>
         </ThemeProvider>

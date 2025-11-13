@@ -1,24 +1,25 @@
-'use client'
 
-import React, { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useDispatch, useSelector } from 'react-redux'
-import { login ,loginWithGoogle} from '../../../src/features/authSlice' // تأكد أن المسار صحيح في مشروعك
-import { ArrowRight, Eye, EyeOff, Mail, Lock, Github, Chrome } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
-import { GoogleLogin } from "@react-oauth/google";
+"use client"
+
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { useDispatch, useSelector } from "react-redux"
+import { login, loginWithGoogle } from "../../../src/features/authSlice"
+import { ArrowRight, Eye, EyeOff, Mail, Lock, Loader } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { GoogleLogin } from "@react-oauth/google"
+import Link from "next/link"
+
 export default function LoginPage() {
   const router = useRouter()
   const dispatch = useDispatch()
   const auth = useSelector((state) => state.auth)
 
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
+    email: "",
+    password: "",
   })
   const [showPassword, setShowPassword] = useState(false)
   const [localError, setLocalError] = useState(null)
@@ -28,173 +29,174 @@ export default function LoginPage() {
     setLocalError(null)
 
     if (!formData.email || !formData.password) {
-      setLocalError('الرجاء إدخال البريد وكلمة المرور')
+      setLocalError("الرجاء إدخال البريد وكلمة المرور")
       return
     }
 
     try {
       const res = await dispatch(login({ email: formData.email, password: formData.password }))
 
-      if (res.meta?.requestStatus === 'fulfilled') {
-        // تسجيل الدخول ناجح — توجيه للمسار الرئيسـي
-        router.push('/')
+      if (res.meta?.requestStatus === "fulfilled") {
+        router.push("/")
       } else {
-        // فشل تسجيل الدخول — عرض رسالة مناسبة
         const payloadError = res.payload || auth.error
-        setLocalError(payloadError || 'فشل تسجيل الدخول')
+        setLocalError(payloadError || "فشل تسجيل الدخول")
       }
     } catch (err) {
-      setLocalError(err?.message || 'حدث خطأ غير متوقع')
+      setLocalError(err?.message || "حدث خطأ غير متوقع")
     }
   }
 
-  const handleSocialLogin = (provider) => {
-    // نقطة بداية للـ OAuth إن أردت التطبيق لاحقاً
-    console.log('social login', provider)
-  }
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
-      const token = credentialResponse.credential;
-      const res = await dispatch(loginWithGoogle(token));
-  
+      const token = credentialResponse.credential
+      const res = await dispatch(loginWithGoogle(token))
+
       if (res.meta?.requestStatus === "fulfilled") {
-        router.push("/");
+        router.push("/")
       } else {
-        setLocalError(res.payload || "فشل تسجيل الدخول بـ Google");
+        setLocalError(res.payload || "فشل تسجيل الدخول بـ Google")
       }
     } catch (err) {
-      setLocalError(err.message || "حدث خطأ غير متوقع");
+      setLocalError(err.message || "حدث خطأ غير متوقع")
     }
-  };
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-6 relative">
-          <Button
-            variant="ghost"
-            onClick={() => router.push('/')}
-            className="absolute top-0 left-0 gap-2 hover:bg-accent/50 rounded-full"
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-4">
+      {/* Background stars */}
+      <div className="absolute inset-0 overflow-hidden">
+        {[...Array(30)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute rounded-full bg-white/20 animate-pulse"
+            style={{
+              width: Math.random() * 2 + 0.5 + "px",
+              height: Math.random() * 2 + 0.5 + "px",
+              left: Math.random() * 100 + "%",
+              top: Math.random() * 100 + "%",
+              animationDelay: Math.random() * 2 + "s",
+              opacity: Math.random() * 0.6 + 0.2,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Content */}
+      <div className="relative z-10 w-full max-w-md">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <button
+            onClick={() => router.push("/auth/start")}
+            className="inline-flex items-center gap-2 text-slate-400 hover:text-slate-200 transition-colors mb-6"
           >
             <ArrowRight className="h-4 w-4" />
-            <span className="hidden sm:inline">العودة</span>
-          </Button>
+            <span>العودة</span>
+          </button>
 
-          <h1 className="text-3xl font-extrabold mb-1">مرحباً بعودتك</h1>
-          <p className="text-muted-foreground">سجل دخولك للمتابعة إلى تطبيقك</p>
+          <h1 className="text-3xl font-bold text-white mb-2">مرحباً بعودتك</h1>
+          <p className="text-slate-400">سجل دخولك للمتابعة إلى تطبيقك</p>
         </div>
 
-        <Card className="border-border/50 bg-card/50 backdrop-blur-sm shadow-2xl">
-          <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-xl text-center">تسجيل الدخول</CardTitle>
-          </CardHeader>
+        {/* Card */}
+        <div className="rounded-2xl backdrop-blur-xl bg-white/5 border border-white/10 p-8 space-y-6">
+          {/* Error Message */}
+          {(localError || auth.error) && (
+            <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-200 text-sm">
+              {localError || auth.error}
+            </div>
+          )}
 
-          <CardContent className="space-y-4">
-            {(localError || auth.error) && (
-              <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
-                {localError || auth.error}
-              </div>
-            )}
+          {/* Google Sign-in */}
+          <div>
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setLocalError("فشل تسجيل الدخول عبر Google")}
+              useOneTap={false}
+            />
+          </div>
 
-<div className="space-y-3">
-  {/* زر Google */}
-  <GoogleLogin
-    onSuccess={handleGoogleSuccess}
-    onError={() => setLocalError("فشل تسجيل الدخول عبر Google")}
-    useOneTap={false}
-  />
+          {/* Separator */}
+          <div className="flex items-center gap-4">
+            <div className="flex-1 h-px bg-gradient-to-r from-slate-700 to-transparent" />
+            <span className="text-slate-400 text-sm">أو</span>
+            <div className="flex-1 h-px bg-gradient-to-l from-slate-700 to-transparent" />
+          </div>
 
-  {/* زر GitHub - لم يتغير */}
-  <Button
-    variant="outline"
-    className="w-full bg-background/50 border-border/50"
-    onClick={() => handleSocialLogin("github")}
-    type="button"
-  >
-    <Github className="h-4 w-4 mr-2" />
-    المتابعة مع GitHub
-  </Button>
-</div>
-
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <Separator className="w-full" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">أو</span>
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-sm font-medium text-slate-300">
+                البريد الإلكتروني
+              </Label>
+              <div className="relative">
+                <Mail className="absolute right-3 top-3 h-4 w-4 text-slate-500" />
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData((p) => ({ ...p, email: e.target.value }))}
+                  placeholder="example@domain.com"
+                  className="pr-10 bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:bg-white/10 focus:border-cyan-500/50"
+                  dir="ltr"
+                  required
+                />
               </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium">البريد الإلكتروني</Label>
-                <div className="relative">
-                  <Mail className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData((p) => ({ ...p, email: e.target.value }))}
-                    placeholder="example@domain.com"
-                    className="pr-10 text-left bg-background/50 border-border/50"
-                    dir="ltr"
-                    required
-                  />
-                </div>
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-sm font-medium text-slate-300">
+                كلمة المرور
+              </Label>
+              <div className="relative">
+                <Lock className="absolute right-3 top-3 h-4 w-4 text-slate-500" />
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={formData.password}
+                  onChange={(e) => setFormData((p) => ({ ...p, password: e.target.value }))}
+                  placeholder="••••••••"
+                  className="pr-10 pl-10 bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:bg-white/10 focus:border-cyan-500/50"
+                  required
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute left-0 top-0 h-full px-3 hover:bg-transparent text-slate-400 hover:text-slate-200"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium">كلمة المرور</Label>
-                <div className="relative">
-                  <Lock className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    value={formData.password}
-                    onChange={(e) => setFormData((p) => ({ ...p, password: e.target.value }))}
-                    placeholder="••••••••"
-                    className="pr-10 pl-10 bg-background/50 border-border/50"
-                    required
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute left-0 top-0 h-full px-3 hover:bg-transparent"
-                    onClick={() => setShowPassword(!showPassword)}
-                    aria-label={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
-                </div>
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg"
-                disabled={auth.status === 'loading'}
-              >
-                {auth.status === 'loading' ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2" />
-                    جاري تسجيل الدخول...
-                  </>
-                ) : (
-                  'تسجيل الدخول'
-                )}
-              </Button>
-            </form>
-
-            <div className="text-center text-sm text-muted-foreground">
-              ليس لديك حساب؟{' '}
-              <a href="/auth/register" className="text-primary hover:underline font-medium">
-                إنشاء حساب جديد
-              </a>
             </div>
-          </CardContent>
-        </Card>
+
+            <Button
+              type="submit"
+              className="w-full mt-6 py-3 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold transition-all duration-300"
+              disabled={auth.status === "loading"}
+            >
+              {auth.status === "loading" ? (
+                <div className="flex items-center gap-2">
+                  <Loader className="h-4 w-4 animate-spin" />
+                  جاري تسجيل الدخول...
+                </div>
+              ) : (
+                "تسجيل الدخول"
+              )}
+            </Button>
+          </form>
+
+          {/* Sign Up Link */}
+          <div className="text-center text-sm text-slate-400">
+            ليس لديك حساب؟{" "}
+            <Link href="/auth/register" className="text-cyan-400 hover:text-cyan-300 font-medium transition-colors">
+              إنشاء حساب جديد
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   )
 }
+

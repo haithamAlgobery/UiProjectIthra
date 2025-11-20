@@ -3,11 +3,12 @@
 
 import { useEffect,useState } from "react";
 import { Loader2, RefreshCw } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ContentCard } from "@/components/content-card";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "@/src/store/store";
-
+import useAuth from "@/src/hooks/useAuth";
 import { fetchContent, resetContent, reactOnContent, toggleFavorite, applyOptimisticReaction, applyOptimisticFavorite ,deleteContent} from "@/src/features/content";
 import {
   AlertDialog,
@@ -21,6 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import useViewBatcher from "@/src/hooks/useViewBatcher";
 
+import { useLoading } from "@/app/providers/LoadingProvider"
 
 interface ContentFeedProps {
   categoryId: string;
@@ -35,6 +37,9 @@ export function ContentFeed({ categoryId, type, sort,userName ,search}: ContentF
 
   const [OpenDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [contentIdDelete, setcontentIdDelete] = useState("");
+  const { isAuth } = useAuth()
+  const { setLoading } = useLoading();
+  const router = useRouter()
 
   useViewBatcher();
 
@@ -58,6 +63,13 @@ export function ContentFeed({ categoryId, type, sort,userName ,search}: ContentF
 
   const handleInteract = async (contentId: string, action: "like" | "notLike" | "save") => {
     if (!contentId) return;
+
+    if (!isAuth) {
+      
+      setLoading(true);
+   router.push(`/auth/start`);
+return
+}
 
     try {
       if (action === "save") {

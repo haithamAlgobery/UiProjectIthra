@@ -5,7 +5,7 @@ import { getAccessToken, setAccessToken } from "./tokenStorage";
 
 // أنشئ instance مستقل بدون الاعتماد على store هنا
 const api = axios.create({
-  baseURL: "https://localhost:7021/api",
+  baseURL: "http://ithra.runasp.net/api",
   timeout: 15000,
   withCredentials: true,
 });

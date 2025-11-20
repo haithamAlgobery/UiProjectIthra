@@ -12,7 +12,7 @@ import {
 } from "../lib/tokenStorage";
 
 // axios مستقل لتجنّب circular import مع axiosInstance
-const axiosPlain = axios.create({ baseURL: "https://localhost:7021/api", timeout: 15000 });
+const axiosPlain = axios.create({ baseURL: "http://ithra.runasp.net/api", timeout: 15000 });
 
 // ----------------- Thunks -----------------
 
@@ -106,7 +106,7 @@ export const logout = createAsyncThunk("auth/logout", async (_, { rejectWithValu
 
 
 export const register = createAsyncThunk(
-  "auth/register",
+  "auth/register-not-chacke-email",
   async (data, { rejectWithValue }) => {
     try {
       const form = new FormData();

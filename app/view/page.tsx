@@ -293,7 +293,7 @@ export default function ViewPage() {
             filter: "drop-shadow(0 0 20px #FFD700) drop-shadow(0 0 40px #FFD70080)",
           }}
         >
-          <img src={logo} alt="منصة أثراء" className="w-16 h-16 md:w-20 md:h-20" />
+          <img src="logoA.png" alt="منصة أثراء" className="w-16 h-16 md:w-20 md:h-20" />
         </motion.div>
       </div>
 
@@ -395,7 +395,7 @@ export default function ViewPage() {
             }}
             aria-label="انضم الآن لمنصة أثراء"
           >
-            انضم الآن
+        عرض المنصة
           </motion.button>
 
           {/* Short description - below button */}

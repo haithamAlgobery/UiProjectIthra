@@ -916,10 +916,18 @@ const IMG_BASE = urlRoot + "/UpLoadFileContent"
           )}
 
           {relatedLoaded && (
-            <section>
-              <h2 className="text-2xl font-bold mb-6 text-foreground">محتويات مشابهة</h2>
-              <RelatedFeed contentId={contentId} take={4}></RelatedFeed>
-            </section>
+           <section className="text-center my-8">
+           <h2 className="text-2xl font-bold mb-6 text-foreground">
+             محتويات مشابهة
+           </h2>
+         
+           <div className="mx-auto max-w-2xl">
+             <div className="flex flex-wrap justify-center gap-4">
+               <RelatedFeed contentId={contentId} take={4} />
+             </div>
+           </div>
+         </section>
+         
           )}
         </div>
       </main>

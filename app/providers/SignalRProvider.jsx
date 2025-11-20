@@ -17,7 +17,7 @@ export default function SignalRProvider({ children }) {
     if (initedRef.current) return;
     initedRef.current = true;
 
-    const hubUrl = "https://localhost:7021/hubs/notification";
+    const hubUrl = "http://ithra.runasp.net/hubs/notification";
 
     // دالة تحاول تجديد التوكن عبر Redux thunk ثم تُعيد النتيجة.
     const tryRefresh = async () => {

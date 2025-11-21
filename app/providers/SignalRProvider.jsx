@@ -17,7 +17,7 @@ export default function SignalRProvider({ children }) {
     if (initedRef.current) return;
     initedRef.current = true;
 
-    const hubUrl = "http://ithra.runasp.net/hubs/notification";
+    const hubUrl = "https://morning-bread-a0dc.spring-wave-654dhaithamalgobery5workersdev.workers.dev/hubs/notification";
 
     // دالة تحاول تجديد التوكن عبر Redux thunk ثم تُعيد النتيجة.
     const tryRefresh = async () => {

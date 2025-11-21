@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux'
 
 export const useDataBasic = () => {
   const {data} = useSelector((state) => state.dataBasic)
- const urlRoot="http://ithra.runasp.net"
+ const urlRoot="https://morning-bread-a0dc.spring-wave-654dhaithamalgobery5workersdev.workers.dev/"
  const webName=data?.nameWeb ||"منصة أثراء"
  const logo=urlRoot+"/UploadFileDataBasic/"+data?.urlLogo ||"logoA.png"
 const description=data?.description ||" منصة أثراء هي مساحة لمشاركة ونشر الأبحاث والمقالات العلمية — مجتمع معرفي يربط الباحثين والمهتمين، ويقدّم محتوى موثوقًا بطريقة بصرية جذابة وسهلة الوصول."

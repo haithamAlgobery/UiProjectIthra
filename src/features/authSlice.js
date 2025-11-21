@@ -12,7 +12,7 @@ import {
 } from "../lib/tokenStorage";
 
 // axios مستقل لتجنّب circular import مع axiosInstance
-const axiosPlain = axios.create({ baseURL: "http://ithra.runasp.net/api", timeout: 15000 });
+const axiosPlain = axios.create({ baseURL: "https://morning-bread-a0dc.spring-wave-654dhaithamalgobery5workersdev.workers.dev/api", timeout: 15000 });
 
 // ----------------- Thunks -----------------
 

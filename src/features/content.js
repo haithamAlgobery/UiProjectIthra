@@ -2,7 +2,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../lib/axiosInstance";
 
-const DEFAULT_TAKE = 3;
+const DEFAULT_TAKE = 8;
 
 // ---------------------- createContent (NEW) ----------------------
 export const createContent = createAsyncThunk(

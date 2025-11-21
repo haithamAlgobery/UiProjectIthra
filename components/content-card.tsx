@@ -365,7 +365,7 @@ export function ContentCard({ content, onInteract, onDelete }: ContentCardProps)
               }}
             >
               <Heart className={cn("h-4 w-4 shrink-0", myInterActive?.isLike && "fill-current")} />
-              <span className="hidden sm:inline">{interactiveCounts?.likeCount ?? 0}</span>
+              <span>{interactiveCounts?.likeCount ?? 0}</span>
             </Button>
 
             <Button
@@ -378,7 +378,7 @@ export function ContentCard({ content, onInteract, onDelete }: ContentCardProps)
               }}
             >
               <ThumbsDown className={cn("h-4 w-4 shrink-0", myInterActive?.isNotLike && "fill-current")} />
-              <span className="hidden sm:inline">{interactiveCounts?.notLikeCount ?? 0}</span>
+              <span>{interactiveCounts?.notLikeCount ?? 0}</span>
             </Button>
           </div>
 

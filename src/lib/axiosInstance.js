@@ -5,7 +5,7 @@ import { getAccessToken, setAccessToken } from "./tokenStorage";
 
 // أنشئ instance مستقل بدون الاعتماد على store هنا
 const api = axios.create({
-  baseURL: "http://ithra.runasp.net/api",
+  baseURL: "https://morning-bread-a0dc.spring-wave-654dhaithamalgobery5workersdev.workers.dev/api",
   timeout: 15000,
   withCredentials: true,
 });

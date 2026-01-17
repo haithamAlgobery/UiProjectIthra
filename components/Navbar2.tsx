@@ -180,10 +180,33 @@ const {unreadCount}=useNotifications();
               </>
 
             ) : (
-              <Button variant="default" size="sm" className="rounded-full" onClick={() => handleLogin()}>
+              <div className="flex items-center gap-2">
+  
+              <Button
+                variant="ghost"
+                size="sm"
+                className="rounded-full w-9 h-9 p-0 flex items-center justify-center"
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                title={theme === "dark" ? "الوضع الفاتح" : "الوضع المظلم"}
+              >
+                {theme === "dark" ? (
+                  <Sun className="h-4 w-4" />
+                ) : (
+                  <Moon className="h-4 w-4" />
+                )}
+              </Button>
+            
+              <Button
+                variant="default"
+                size="sm"
+                className="rounded-full"
+                onClick={() => handleLogin()}
+              >
                 <LogIn className="h-4 w-4 mr-2" />
                 <span className="hidden sm:inline">تسجيل الدخول</span>
               </Button>
+            
+            </div>
             )}
           </div>
 

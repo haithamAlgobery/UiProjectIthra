@@ -7,9 +7,9 @@ import { useRouter, useParams } from "next/navigation"
 import { useDispatch, useSelector } from "react-redux"
 import { fetchContentById, updateContentById, clearContent } from "@/src/features/editableContentSlice"
 import { fetchTagsByContentId, updateTagsByContentId } from "@/src/features/tagsSlice"
-import { ArrowRight, Upload, X, Save, XCircle, Edit3, Plus, ExternalLink } from "lucide-react"
+import { ArrowRight, Upload, X, Save, XCircle, Edit3, Plus, ExternalLink, LayoutGrid, Type, FileText, Image as ImageIcon, Tag } from "lucide-react"
 import { Button } from "@/components/ui/button"
-
+import useDataBasic from "@/src/hooks/useDataBasic"
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false })
 import "react-quill/dist/quill.snow.css"
 
@@ -54,7 +54,8 @@ export default function EditContentPage() {
   const [errorMsg, setErrorMsg] = useState(null)
   const [isEditingTags, setIsEditingTags] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
-
+  const { urlRoot } = useDataBasic()
+ const IMG_BASE = urlRoot + "/UpLoadFileContent"
   useEffect(() => {
     if (!id) return
     dispatch(fetchContentById(id))
@@ -230,291 +231,367 @@ export default function EditContentPage() {
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 relative overflow-hidden">
-      <div className="absolute inset-0 opacity-30 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/20 rounded-full blur-3xl animate-pulse delay-1000" />
+    <div className="min-h-screen bg-muted/10 relative pb-20">
+      {/* Header Bar */}
+      <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border/40 shadow-sm">
+        <div className="container max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.back()}
+              className="rounded-full hover:bg-muted"
+            >
+              <ArrowRight className="w-5 h-5" />
+            </Button>
+            <h1 className="text-lg font-bold hidden sm:block">تعديل المحتوى</h1>
+          </div>
+          <div className="flex items-center gap-3">
+             {isResearch && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => router.push(`/research/${id}/attachments`)}
+                  className="gap-2 hidden sm:flex"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  المرفقات
+                </Button>
+             )}
+          </div>
+        </div>
       </div>
 
-      <div className="relative z-10 container max-w-5xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <Button
-            variant="ghost"
-            onClick={() => router.back()}
-            className="group hover:bg-primary/10 transition-all duration-300"
-          >
-            <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform duration-300" />
-            رجوع
-          </Button>
-
-          {isResearch && (
-            <Button
-              variant="outline"
-              onClick={() => router.push(`/research/${id}/attachments`)}
-              className="group hover:bg-accent/10 hover:border-accent transition-all duration-300"
-            >
-              <ExternalLink className="ml-2 group-hover:rotate-12 transition-transform duration-300" />
-              انتقل إلى المرفقات
-            </Button>
-          )}
-        </div>
-
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-l from-foreground to-foreground/70 bg-clip-text text-transparent">
-            تعديل المحتوى
-          </h1>
-          <p className="text-muted-foreground">{content?.types?.title || "جاري التحميل..."}</p>
+      <div className="container max-w-5xl mx-auto px-4 py-8">
+        <div className="mb-8">
+            <h1 className="text-3xl font-extrabold tracking-tight mb-2">
+              {content?.types?.title || "تعديل البيانات"}
+            </h1>
+            <p className="text-muted-foreground">
+              قم بتحديث البيانات أدناه. التغييرات ستنعكس فوراً بعد الحفظ.
+            </p>
         </div>
 
         {loading && (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent" />
-            <p className="mt-4 text-muted-foreground">جاري جلب البيانات...</p>
+          <div className="flex flex-col items-center justify-center min-h-[400px]">
+            <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            <p className="mt-4 text-muted-foreground animate-pulse">جاري تحميل البيانات...</p>
           </div>
         )}
 
         {error && (
-          <div className="bg-destructive/10 border border-destructive/20 rounded-2xl p-4 text-destructive text-center">
+          <div className="p-6 bg-destructive/5 border border-destructive/20 rounded-xl text-destructive text-center flex flex-col items-center">
+             <XCircle className="w-10 h-10 mb-2 opacity-50"/>
             خطأ: {String(error)}
           </div>
         )}
 
         {!loading && content && (
-          <form onSubmit={handleUpdateContent} className="space-y-6">
-            <div className="bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
-              {/* Title */}
-              <div className="space-y-2 mb-6">
-                <label className="text-sm font-medium text-foreground/90">العنوان *</label>
-                <input
-                  value={formData.title}
-                  onChange={(e) => setFormData((p) => ({ ...p, title: e.target.value }))}
-                  className="w-full h-11 px-4 bg-background/50 border border-border/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-300 hover:border-primary/30"
-                  dir="rtl"
-                />
-                <div className="text-xs text-muted-foreground text-left">
-                  {formData.title.trim().length}/{limits.titleMax}
-                </div>
-              </div>
-
-              {/* Category */}
-              <div className="space-y-2 mb-6">
-                <label className="text-sm font-medium text-foreground/90">القسم *</label>
-                <select
-                  value={formData.categoryId}
-                  onChange={(e) => setFormData((p) => ({ ...p, categoryId: e.target.value }))}
-                  className="w-full h-11 px-4 bg-background/50 border border-border/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-300 hover:border-primary/30"
-                  dir="rtl"
-                >
-                  <option value="">اختر القسم</option>
-                  {flattenCategories(categories).map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {"\u00A0".repeat(c.level * 2)}
-                      {c.title}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-2 mb-6">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-foreground/90">الوسوم</label>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsEditingTags(!isEditingTags)}
-                    className="group hover:bg-primary/10 transition-all duration-300"
-                  >
-                    <Edit3 className="ml-1 w-4 h-4 group-hover:rotate-12 transition-transform duration-300" />
-                    {isEditingTags ? "إخفاء" : "تعديل"}
-                  </Button>
+          <form onSubmit={handleUpdateContent} className="space-y-8">
+            
+            {/* Grid Layout for Main Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              {/* Card: Basic Info */}
+              <div className="bg-card border border-border/50 rounded-xl shadow-sm p-6 space-y-6 md:col-span-2">
+                <div className="flex items-center gap-2 pb-4 border-b border-border/50">
+                    <Type className="w-5 h-5 text-primary" />
+                    <h2 className="font-semibold text-lg">البيانات الأساسية</h2>
                 </div>
 
-                {isEditingTags && (
-                  <div className="flex gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <input
-                      value={currentTag}
-                      onChange={(e) => setCurrentTag(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addTag())}
-                      placeholder="أضف وسم واضغط Enter"
-                      className="flex-1 h-10 px-4 bg-background/50 border border-border/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-300"
-                      dir="rtl"
-                    />
-                    <Button
-                      type="button"
-                      onClick={addTag}
-                      size="sm"
-                      className="group hover:scale-105 transition-all duration-300"
-                    >
-                      <Plus className="ml-1 w-4 h-4 group-hover:rotate-90 transition-transform duration-300" />
-                      إضافة
-                    </Button>
-                  </div>
-                )}
-
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {localTags.map((t) => (
-                    <span
-                      key={t}
-                      className="group px-3 py-1.5 bg-primary/10 hover:bg-primary/20 border border-primary/20 rounded-full flex items-center gap-2 transition-all duration-300 hover:scale-105"
-                    >
-                      <span className="text-sm">{t}</span>
-                      <button
-                        type="button"
-                        onClick={() => removeTag(t)}
-                        className="text-muted-foreground hover:text-destructive transition-colors duration-200"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-2 mb-6">
-                <label className="text-sm font-medium text-foreground/90">صورة أو فيديو (اختياري)</label>
-                <div
-                  className={`relative border-2 border-dashed rounded-2xl p-6 transition-all duration-300 ${
-                    isDragging
-                      ? "border-primary bg-primary/5 scale-[1.02]"
-                      : "border-border/50 hover:border-primary/50 hover:bg-accent/5"
-                  }`}
-                  onDragOver={(e) => {
-                    e.preventDefault()
-                    setIsDragging(true)
-                  }}
-                  onDragLeave={() => setIsDragging(false)}
-                  onDrop={(e) => {
-                    e.preventDefault()
-                    setIsDragging(false)
-                    const f = e.dataTransfer.files?.[0]
-                    onMediaChange(f)
-                  }}
-                >
-                  {!mediaPreview ? (
-                    <div className="text-center py-8">
-                      <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                      <p className="text-sm text-muted-foreground mb-2">اسحب وأفلت الملف هنا أو</p>
-                      <label className="inline-block px-4 py-2 bg-primary/10 hover:bg-primary/20 rounded-xl cursor-pointer transition-all duration-300 hover:scale-105">
-                        <span className="text-sm font-medium">اختر ملف</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Title */}
+                    <div className="space-y-2">
+                    <label className="text-sm font-medium flex items-center gap-1">
+                         العنوان <span className="text-destructive">*</span>
+                    </label>
+                    <div className="relative">
                         <input
-                          type="file"
-                          accept="image/*,video/*"
-                          onChange={(e) => onMediaChange(e.target.files?.[0])}
-                          className="hidden"
+                        value={formData.title}
+                        onChange={(e) => setFormData((p) => ({ ...p, title: e.target.value }))}
+                        className="w-full h-11 px-4 bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                        dir="rtl"
+                        placeholder="أدخل عنواناً مميزاً..."
                         />
-                      </label>
-                      <p className="text-xs text-muted-foreground mt-3">حد الصورة: 5MB — حد الفيديو: 15MB</p>
+                         <div className="absolute left-3 top-3 text-[10px] text-muted-foreground/70 font-mono bg-background px-1">
+                            {formData.title.trim().length}/{limits.titleMax}
+                        </div>
                     </div>
-                  ) : (
-                    <div className="relative group">
-                      <div className="rounded-xl overflow-hidden max-h-64">
-                        {formData.mediaType === "image" ? (
-                          <img
-                            src={mediaPreview || "/placeholder.svg"}
-                            alt="Preview"
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <video src={mediaPreview} className="w-full h-full" controls />
-                        )}
-                      </div>
-                      <Button
-                        type="button"
-                        onClick={removeMedia}
-                        variant="destructive"
-                        size="sm"
-                        className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
-                      >
-                        <XCircle className="w-4 h-4 ml-1" />
-                        إزالة
-                      </Button>
                     </div>
-                  )}
+
+                    {/* Category */}
+                    <div className="space-y-2">
+                    <label className="text-sm font-medium flex items-center gap-1">
+                        القسم <span className="text-destructive">*</span>
+                    </label>
+                    <div className="relative">
+                         <LayoutGrid className="absolute right-3 top-3.5 w-4 h-4 text-muted-foreground pointer-events-none" />
+                        <select
+                        value={formData.categoryId}
+                        onChange={(e) => setFormData((p) => ({ ...p, categoryId: e.target.value }))}
+                        className="w-full h-11 pr-10 pl-4 bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none"
+                        dir="rtl"
+                        >
+                        <option value="">-- اختر القسم المناسب --</option>
+                        {flattenCategories(categories).map((c) => (
+                            <option key={c.id} value={c.id}>
+                            {"\u00A0".repeat(c.level * 4)}
+                            {c.title}
+                            </option>
+                        ))}
+                        </select>
+                    </div>
+                    </div>
+                </div>
+
+                {/* Tags Section */}
+                <div className="space-y-3 pt-2">
+                    <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium flex items-center gap-2">
+                            <Tag className="w-4 h-4 text-muted-foreground" />
+                            الوسوم
+                        </label>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setIsEditingTags(!isEditingTags)}
+                            className="h-8 text-xs hover:bg-primary/5 hover:text-primary"
+                        >
+                            <Edit3 className="w-3.5 h-3.5 ml-1.5" />
+                            {isEditingTags ? "إنهاء التعديل" : "إدارة الوسوم"}
+                        </Button>
+                    </div>
+
+                    {isEditingTags && (
+                    <div className="flex gap-2 animate-in slide-in-from-top-1 fade-in duration-200">
+                        <input
+                        value={currentTag}
+                        onChange={(e) => setCurrentTag(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addTag())}
+                        placeholder="اكتب الوسم ثم اضغط Enter"
+                        className="flex-1 h-10 px-4 bg-muted/30 border border-input rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                        dir="rtl"
+                        autoFocus
+                        />
+                        <Button type="button" onClick={addTag} size="sm" className="px-4">
+                        <Plus className="w-4 h-4 ml-1" /> إضافة
+                        </Button>
+                    </div>
+                    )}
+
+                    <div className="flex flex-wrap gap-2 min-h-[40px] p-2 rounded-lg bg-muted/20 border border-dashed border-border/60">
+                         {localTags.length === 0 && !isEditingTags && (
+                             <span className="text-muted-foreground text-sm py-1 px-1">لا توجد وسوم مضافة.</span>
+                         )}
+                        {localTags.map((t) => (
+                        <div
+                            key={t}
+                            className="group inline-flex items-center gap-1.5 px-3 py-1 bg-background border border-border rounded-full text-sm shadow-sm transition-all hover:border-primary/50"
+                        >
+                            <span className="text-foreground/80 font-medium">#{t}</span>
+                            <button
+                            type="button"
+                            onClick={() => removeTag(t)}
+                            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full p-0.5 transition-colors"
+                            >
+                            <X className="w-3 h-3" />
+                            </button>
+                        </div>
+                        ))}
+                    </div>
                 </div>
               </div>
 
-              {/* Overview/Details */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground/90">النظرة العامة *</label>
-                <textarea
-                  value={formData.details}
-                  onChange={(e) => setFormData((p) => ({ ...p, details: e.target.value }))}
-                  rows={4}
-                  className="w-full px-4 py-3 bg-background/50 border border-border/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-300 hover:border-primary/30 resize-none"
-                  dir="rtl"
-                />
-                <div className="text-xs text-muted-foreground text-left">
-                  {formData.details.trim().length}/{limits.detailsMax}
-                </div>
-              </div>
+               {/* Card: Overview & Media */}
+               <div className="bg-card border border-border/50 rounded-xl shadow-sm p-6 space-y-6 md:col-span-2">
+                    <div className="flex items-center gap-2 pb-4 border-b border-border/50">
+                        <FileText className="w-5 h-5 text-primary" />
+                        <h2 className="font-semibold text-lg">التفاصيل والوسائط</h2>
+                    </div>
+
+                    {/* Overview */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium flex items-center gap-1">
+                            نظرة عامة (ملخص) <span className="text-destructive">*</span>
+                        </label>
+                        <textarea
+                            value={formData.details}
+                            onChange={(e) => setFormData((p) => ({ ...p, details: e.target.value }))}
+                            rows={4}
+                            className="w-full px-4 py-3 bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none leading-relaxed"
+                            dir="rtl"
+                            placeholder="اكتب وصفاً مختصراً يظهر في البطاقات..."
+                        />
+                         <div className="text-xs text-muted-foreground text-left">
+                            {formData.details.trim().length}/{limits.detailsMax}
+                        </div>
+                    </div>
+
+                    {/* Media Upload */}
+                    <div className="space-y-3">
+                        <label className="text-sm font-medium flex items-center gap-2">
+                            <ImageIcon className="w-4 h-4 text-muted-foreground" />
+                            الصورة البارزة أو الفيديو
+                        </label>
+                        
+                        <div
+                        className={`relative group border-2 border-dashed rounded-xl transition-all duration-300 overflow-hidden ${
+                            isDragging
+                            ? "border-primary bg-primary/5 scale-[1.01]"
+                            : "border-border/60 hover:border-primary/50 hover:bg-muted/30"
+                        }`}
+                        onDragOver={(e) => {
+                            e.preventDefault()
+                            setIsDragging(true)
+                        }}
+                        onDragLeave={() => setIsDragging(false)}
+                        onDrop={(e) => {
+                            e.preventDefault()
+                            setIsDragging(false)
+                            const f = e.dataTransfer.files?.[0]
+                            onMediaChange(f)
+                        }}
+                        >
+                        {!mediaPreview ? (
+                            <div className="flex flex-col items-center justify-center py-10 px-4 cursor-pointer text-center">
+                                <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                    <Upload className="w-6 h-6" />
+                                </div>
+                                <p className="text-sm font-medium mb-1">اسحب وأفلت الملف هنا</p>
+                                <p className="text-xs text-muted-foreground mb-4">أو اضغط للاختيار من جهازك</p>
+                                
+                                <label className="cursor-pointer">
+                                    <span className="px-4 py-2 bg-background border border-input rounded-md shadow-sm text-xs hover:bg-accent transition-colors">
+                                        تصفح الملفات
+                                    </span>
+                                    <input
+                                    type="file"
+                                    accept="image/*,video/*"
+                                    onChange={(e) => onMediaChange(e.target.files?.[0])}
+                                    className="hidden"
+                                    />
+                                </label>
+                                <p className="text-[10px] text-muted-foreground/60 mt-4 font-mono">
+                                    IMG &lt; 5MB | VIDEO &lt; 15MB
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="relative w-full h-full bg-black/5 min-h-[250px] flex items-center justify-center">
+                            {formData.mediaType === "image" ? (
+                                <img
+                                src={IMG_BASE +"/"+ mediaPreview || "/placeholder.svg"}
+                                alt="Preview"
+                                className="w-full h-full max-h-[400px] object-contain"
+                                />
+                            ) : (
+                                <video src={IMG_BASE +"/"+ mediaPreview } className="w-full max-h-[400px]" controls />
+                            )}
+                            
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <Button
+                                    type="button"
+                                    onClick={removeMedia}
+                                    variant="destructive"
+                                    size="sm"
+                                    className="shadow-lg transform scale-90 group-hover:scale-100 transition-transform"
+                                >
+                                    <XCircle className="w-4 h-4 ml-2" />
+                                    إزالة الملف
+                                </Button>
+                            </div>
+                            </div>
+                        )}
+                        </div>
+                    </div>
+               </div>
             </div>
 
+            {/* Editor Section (Full Width) */}
             {isResearch && (
-              <div className="bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
-                <label className="text-sm font-medium text-foreground/90 mb-3 block">محتوى البحث *</label>
-                <div
-                  className="rounded-xl overflow-hidden border border-border/50 focus-within:ring-2 focus-within:ring-primary/50 transition-all duration-300"
-                  style={{ minHeight: "500px" }}
-                >
-                  {typeof window !== "undefined" && ReactQuill ? (
-                    <ReactQuill
-                      value={formData.description || ""}
-                      onChange={(v) => setFormData((p) => ({ ...p, description: v }))}
-                      modules={quillModules}
-                      theme="snow"
-                      className="h-full [&_.ql-container]:min-h-[450px] [&_.ql-editor]:min-h-[450px] [&_.ql-editor]:text-base [&_.ql-editor]:font-sans"
-                      style={{ direction: "rtl" }}
-                    />
-                  ) : (
-                    <textarea
-                      value={formData.description || ""}
-                      onChange={(e) =>
-                        setFormData((p) => ({
-                          ...p,
-                          description: e.target.value,
-                        }))
-                      }
-                      rows={20}
-                      className="w-full h-full px-4 py-3 bg-background/50 border-0 focus:outline-none resize-none"
-                      dir="rtl"
-                    />
-                  )}
+              <div className="bg-card border border-border/50 rounded-xl shadow-sm p-6 space-y-4">
+                 <div className="flex items-center gap-2 pb-4 border-b border-border/50">
+                    <FileText className="w-5 h-5 text-primary" />
+                    <h2 className="font-semibold text-lg">محتوى البحث التفصيلي</h2>
                 </div>
-                <div className="text-xs text-muted-foreground text-left mt-2">
-                  {stripHtml(formData.description || "").length}/{limits.descriptionMax}
+                
+                <div
+                  className="rounded-lg overflow-hidden border border-border focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all bg-background"
+                >
+                    {/* Custom styling wrapper for Quill to match Shadcn Theme */}
+                   <div className="[&_.ql-toolbar]:bg-muted/30 [&_.ql-toolbar]:border-b-border/50 [&_.ql-toolbar]:border-0 [&_.ql-container]:border-0 [&_.ql-editor]:text-base [&_.ql-editor]:min-h-[500px] [&_.ql-editor]:font-sans">
+                        {typeof window !== "undefined" && ReactQuill ? (
+                            <ReactQuill
+                            value={formData.description || ""}
+                            onChange={(v) => setFormData((p) => ({ ...p, description: v }))}
+                            modules={quillModules}
+                            theme="snow"
+                            style={{ direction: "rtl" }}
+                            />
+                        ) : (
+                            <textarea
+                            value={formData.description || ""}
+                            onChange={(e) =>
+                                setFormData((p) => ({
+                                ...p,
+                                description: e.target.value,
+                                }))
+                            }
+                            rows={20}
+                            className="w-full h-full px-6 py-4 bg-background border-0 focus:outline-none resize-none"
+                            dir="rtl"
+                            />
+                        )}
+                   </div>
+                </div>
+                <div className="text-xs text-muted-foreground text-left px-1">
+                  {stripHtml(formData.description || "").length}/{limits.descriptionMax} حرف
                 </div>
               </div>
             )}
 
+            {/* Feedback Messages */}
             {errorMsg && (
-              <div className="bg-destructive/10 border border-destructive/20 rounded-2xl p-4 text-destructive animate-in fade-in slide-in-from-top-2 duration-300">
-                {errorMsg}
+              <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 flex items-start gap-3 text-destructive animate-in slide-in-from-top-2">
+                <XCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                <p className="text-sm font-medium">{errorMsg}</p>
               </div>
             )}
             {saveError && (
-              <div className="bg-destructive/10 border border-destructive/20 rounded-2xl p-4 text-destructive animate-in fade-in slide-in-from-top-2 duration-300">
-                {String(saveError)}
+              <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 flex items-start gap-3 text-destructive animate-in slide-in-from-top-2">
+                 <XCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                 <p className="text-sm font-medium">{String(saveError)}</p>
               </div>
             )}
 
-            <div className="flex gap-3 justify-end pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.back()}
-                className="group hover:bg-destructive/10 hover:border-destructive/50 hover:text-destructive transition-all duration-300"
-              >
-                <XCircle className="ml-2 group-hover:rotate-90 transition-transform duration-300" />
-                إلغاء
-              </Button>
+            {/* Action Buttons */}
+            <div className="flex items-center gap-4 pt-6 border-t border-border/40">
               <Button
                 type="submit"
                 disabled={saving}
-                className="group hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
+                size="lg"
+                className="min-w-[160px] shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all"
               >
-                <Save className="ml-2 group-hover:rotate-12 transition-transform duration-300" />
-                {saving ? "جارٍ الحفظ..." : "حفظ التعديلات"}
+                {saving ? (
+                    <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin ml-2" />
+                        جاري الحفظ...
+                    </>
+                ) : (
+                    <>
+                        <Save className="ml-2 w-4 h-4" />
+                        حفظ التعديلات
+                    </>
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                onClick={() => router.back()}
+                className="hover:bg-destructive/5 hover:text-destructive hover:border-destructive/30"
+              >
+                إلغاء
               </Button>
             </div>
           </form>
@@ -523,4 +600,3 @@ export default function EditContentPage() {
     </div>
   )
 }
-

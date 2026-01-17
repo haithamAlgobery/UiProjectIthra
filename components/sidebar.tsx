@@ -1,17 +1,17 @@
-// src/components/sidebar.tsx
+
 "use client";
 
 import type React from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useState } from "react";
-import { ChevronRight, Hash, Folder, FolderOpen } from "lucide-react";
+import { ChevronRight, Hash, Folder, FolderOpen, Loader2, Sparkles, ExternalLink } from "lucide-react"; // أضفت Sparkles و ExternalLink
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import type { Category } from "@/lib/mock-data";
 import { setCategory } from "@/src/features/filters";
 import type { RootState, AppDispatch } from "@/src/store/store";
-import { Loader2 } from "lucide-react";
+
 interface SidebarProps {
   isOpen: boolean;
   selectedCategory: string;
@@ -89,6 +89,7 @@ export function Sidebar({ isOpen, selectedCategory }: SidebarProps) {
       )}
     >
       <div style={{ marginTop: "60px" }} className="flex h-full flex-col">
+        {/* منطقة القوائم */}
         <ScrollArea className="flex-1 p-4">
           <div className="space-y-1">
             <Button
@@ -105,9 +106,34 @@ export function Sidebar({ isOpen, selectedCategory }: SidebarProps) {
               </div>
             </Button>
 
-            {loading ? <Loader2 className="h-8 w-8 animate-spin text-primary " />: error ? <p className="text-red-500">حدث خطأ: {error}</p> : categories?.map((category: Category) => renderCategory(category))}
+            {loading ? <Loader2 className="h-8 w-8 animate-spin text-primary " /> : error ? <p className="text-red-500">حدث خطأ: {error}</p> : categories?.map((category: Category) => renderCategory(category))}
           </div>
         </ScrollArea>
+
+        {/* --- منطقة الزر الجديد في الأسفل --- */}
+        <div style={{ marginBottom: "50px" }} className="p-4 border-t border-sidebar-border bg-sidebar/50 backdrop-blur-sm">
+  <a 
+    href="https://ithraai.netlify.app/" 
+    target="_blank" 
+    rel="noopener noreferrer"
+    className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-lg 
+               bg-gradient-to-r from-violet-600 to-indigo-600 
+               px-3 py-2 text-sm text-white shadow-md 
+               transition-all duration-300 
+               hover:scale-[1.01] hover:shadow-indigo-500/20 
+               active:scale-95"
+  >
+    {/* تأثير اللمعان الخلفي */}
+    <div className="absolute inset-0 bg-white/20 translate-y-full skew-y-12 transition-transform duration-500 group-hover:translate-y-0" />
+    
+    <span className="relative font-semibold tracking-wide">
+      إثراء AI
+    </span>
+
+    <Sparkles className="relative h-4 w-4 animate-pulse text-yellow-200" />
+  </a>
+</div>
+
       </div>
     </aside>
   );

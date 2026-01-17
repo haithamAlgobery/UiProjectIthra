@@ -76,7 +76,7 @@ export function FloatingActionButton({ onCreatePost, onCreateResearch }: Floatin
         onClick={toggleExpanded}
         className={cn(
           "h-14 w-14 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300",
-          "animate-pulse hover:animate-none hover:scale-110",
+          " hover:scale-110",
           isExpanded && "rotate-45 bg-destructive hover:bg-destructive/90",
         )}
       >

@@ -12,7 +12,7 @@ import {
 } from "../lib/tokenStorage";
 
 // axios مستقل لتجنّب circular import مع axiosInstance
-const axiosPlain = axios.create({ baseURL: "https://morning-bread-a0dc.spring-wave-654dhaithamalgobery5workersdev.workers.dev/api", timeout: 15000 });
+const axiosPlain = axios.create({ /*baseURL: "https://localhost:7021/api"*/baseURL:"https://morning-bread-a0dc.spring-wave-654dhaithamalgobery5workersdev.workers.dev/api", timeout: 15000 });
 
 // ----------------- Thunks -----------------
 
@@ -106,7 +106,7 @@ export const logout = createAsyncThunk("auth/logout", async (_, { rejectWithValu
 
 
 export const register = createAsyncThunk(
-  "auth/register-not-chacke-email",
+  "auth/register",
   async (data, { rejectWithValue }) => {
     try {
       const form = new FormData();

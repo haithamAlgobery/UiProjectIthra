@@ -1,9 +1,8 @@
 // src/components/related-feed.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Loader2, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { ContentCard } from "@/components/content-card";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "@/src/store/store";
@@ -19,16 +18,21 @@ import {
 import useViewBatcher from "@/src/hooks/useViewBatcher";
 
 interface RelatedFeedProps {
-  contentId: string; // here we require the id to fetch suggestions
+  contentId: string;
   take?: number;
 }
 
 export default function RelatedFeed({ contentId, take }: RelatedFeedProps) {
   const dispatch = useDispatch<AppDispatch>();
-  const { items, loading, loadingMore, hasMore, spik } = useSelector((s: RootState) => s.related);
+  const { items, loading, loadingMore, hasMore, spik } = useSelector(
+    (s: RootState) => s.related
+  );
+
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   useViewBatcher();
 
+  // تحميل أول دفعة عند تغير المحتوى
   useEffect(() => {
     if (!contentId) return;
     dispatch(resetRelated());
@@ -36,39 +40,69 @@ export default function RelatedFeed({ contentId, take }: RelatedFeedProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contentId]);
 
-  const loadMore = () => {
-    if (loadingMore || !hasMore) return;
-    dispatch(fetchRelated({ reset: false, take, spik, contentId }));
-  };
+  // تحميل تلقائي عند الوصول للنهاية
+  useEffect(() => {
+    if (!loadMoreRef.current) return;
 
-  const handleInteract = async (contentIdParam: string, action: "like" | "notLike" | "save") => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && hasMore && !loadingMore) {
+          dispatch(fetchRelated({ reset: false, take, spik, contentId }));
+        }
+      },
+      {
+        rootMargin: "200px",
+      }
+    );
+
+    observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, loadingMore, items, contentId]);
+
+  const handleInteract = async (
+    contentIdParam: string,
+    action: "like" | "notLike" | "save"
+  ) => {
     if (!contentIdParam) return;
+
     try {
       if (action === "save") {
-        // IMPORTANT: in related feed we DON'T remove the item.
-        // We do an optimistic toggle of the saved flag locally, then call server.
-        dispatch(applyOptimisticToggleSaveForRelated({ contentId: contentIdParam }));
-        await dispatch(toggleFavoriteOnRelatedList({ contentId: contentIdParam })).unwrap();
+        dispatch(
+          applyOptimisticToggleSaveForRelated({
+            contentId: contentIdParam,
+          })
+        );
+        await dispatch(
+          toggleFavoriteOnRelatedList({ contentId: contentIdParam })
+        ).unwrap();
       } else {
         const reactionType = action === "like";
-        dispatch(applyOptimisticReactionForRelated({ contentId: contentIdParam, reactionType }));
-        await dispatch(reactOnRelated({ contentId: contentIdParam, reactionType })).unwrap();
+        dispatch(
+          applyOptimisticReactionForRelated({
+            contentId: contentIdParam,
+            reactionType,
+          })
+        );
+        await dispatch(
+          reactOnRelated({ contentId: contentIdParam, reactionType })
+        ).unwrap();
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Related interaction error:", err);
-      // rollback if needed
       dispatch(rollbackRelatedOptimistic({ contentId: contentIdParam }));
     }
   };
 
+  // Loader أولي
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
       </div>
     );
   }
 
+  // لا توجد بيانات
   if (!items || items.length === 0) {
     return (
       <div className="text-center py-12">
@@ -90,25 +124,22 @@ export default function RelatedFeed({ contentId, take }: RelatedFeedProps) {
             key={keyId}
             content={item}
             onInteract={handleInteract}
-            // related feed لا يملك حذف افتراضي هنا
           />
         );
       })}
 
-      {hasMore && (
-        <div className="flex justify-center pt-6">
-          <Button onClick={loadMore} disabled={loadingMore} variant="outline" className="gap-2 bg-transparent">
-            {loadingMore ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                جاري التحميل...
-              </>
-            ) : (
-              "تحميل المزيد"
-            )}
-          </Button>
+      {/* أنيميشن تحميل جميل */}
+      {loadingMore && (
+        <div className="flex justify-center py-6">
+          <div className="flex items-center gap-3 text-muted-foreground animate-pulse">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            <span className="text-sm">جاري تحميل المزيد...</span>
+          </div>
         </div>
       )}
+
+      {/* عنصر مراقبة الوصول للنهاية */}
+      {hasMore && <div ref={loadMoreRef} className="h-10" />}
 
       {!hasMore && items.length > 0 && (
         <div className="text-center py-6 text-muted-foreground text-sm">

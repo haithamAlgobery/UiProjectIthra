@@ -1,15 +1,26 @@
+
+
+
+
+
 // src/components/content-feed.tsx
 "use client";
 
-import { useEffect,useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Loader2, RefreshCw } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import { ContentCard } from "@/components/content-card";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "@/src/store/store";
 import useAuth from "@/src/hooks/useAuth";
-import { fetchContent, resetContent, reactOnContent, toggleFavorite, applyOptimisticReaction, applyOptimisticFavorite ,deleteContent} from "@/src/features/content";
+import {
+  fetchContent,
+  reactOnContent,
+  toggleFavorite,
+  applyOptimisticReaction,
+  applyOptimisticFavorite,
+  deleteContent,
+} from "@/src/features/content";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,105 +32,130 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import useViewBatcher from "@/src/hooks/useViewBatcher";
-
-import { useLoading } from "@/app/providers/LoadingProvider"
+import { useLoading } from "@/app/providers/LoadingProvider";
 
 interface ContentFeedProps {
   categoryId: string;
   type: string;
   sort: string;
-  userName:string;
-  search:string 
-
+  userName: string;
+  search: string;
 }
 
-export function ContentFeed({ categoryId, type, sort,userName ,search}: ContentFeedProps) {
-
+export function ContentFeed({
+  categoryId,
+  type,
+  sort,
+  userName,
+  search,
+}: ContentFeedProps) {
   const [OpenDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [contentIdDelete, setcontentIdDelete] = useState("");
-  const { isAuth } = useAuth()
+
+  const { isAuth } = useAuth();
   const { setLoading } = useLoading();
-  const router = useRouter()
+  const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
 
   useViewBatcher();
 
-  const dispatch = useDispatch<AppDispatch>();
-  const { items, loading, loadingMore, hasMore, skip } = useSelector((s: RootState) => s.content);
+  const { items, loading, loadingMore, hasMore, skip } = useSelector(
+    (s: RootState) => s.content
+  );
 
-  // load first page whenever filters change
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
+  // تحميل أول صفحة عند تغير الفلاتر
   useEffect(() => {
+    dispatch(
+      fetchContent({
+        reset: true,
+        categoryId: categoryId || undefined,
+        type: type || undefined,
+        sort,
+        userName,
+        search,
+      })
+    );
+  }, [categoryId, type, sort, search]);
 
-      dispatch(fetchContent({ reset: true, categoryId: categoryId || undefined, type: type || undefined, sort ,userName,search}));
+  // تحميل تلقائي عند الوصول للنهاية
+  useEffect(() => {
+    if (!loadMoreRef.current) return;
 
-  }, [categoryId, type, sort,search]);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && hasMore && !loadingMore) {
+          dispatch(
+            fetchContent({
+              reset: false,
+              categoryId: categoryId || undefined,
+              type: type || undefined,
+              sort,
+              skip,
+              userName,
+              search,
+            })
+          );
+        }
+      },
+      {
+        rootMargin: "200px",
+      }
+    );
 
- 
+    observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, loadingMore, items]);
 
-
-  const loadMore = () => {
-    if (loadingMore || !hasMore) return;
-    dispatch(fetchContent({ reset: false, categoryId: categoryId || undefined, type: type || undefined, sort, skip ,userName,search}));
-  };
-
-  const handleInteract = async (contentId: string, action: "like" | "notLike" | "save") => {
+  const handleInteract = async (
+    contentId: string,
+    action: "like" | "notLike" | "save"
+  ) => {
     if (!contentId) return;
 
     if (!isAuth) {
-      
       setLoading(true);
-   router.push(`/auth/start`);
-return
-}
+      router.push(`/auth/start`);
+      return;
+    }
 
     try {
       if (action === "save") {
-        // optimistic toggle
         dispatch(applyOptimisticFavorite({ contentId }));
-        // send request
         await dispatch(toggleFavorite({ contentId })).unwrap();
       } else {
         const reactionType = action === "like";
-        // optimistic apply
         dispatch(applyOptimisticReaction({ contentId, reactionType }));
-        // send request
         await dispatch(reactOnContent({ contentId, reactionType })).unwrap();
       }
-    } catch (err: any) {
-      // error handling: slice already handles rollback when possible, but log for dev
-      if (err?.response) {
-        console.error("Interaction error server:", err.response.data);
-      } else {
-        console.error("Interaction error:", err);
-      }
+    } catch (err) {
+      console.error("Interaction error:", err);
     }
   };
 
+  const onDelete = (id?: string) => {
+    if (id) {
+      setOpenDeleteDialog(true);
+      setcontentIdDelete(id);
+    }
+  };
 
+  const actionDelete = () => {
+    dispatch(deleteContent(contentIdDelete));
+    setOpenDeleteDialog(false);
+  };
 
-  const onDelete=( id?: string) => {
-
-if(id !==null){
-  setOpenDeleteDialog(true)
-  setcontentIdDelete(id);
-}
-
-  }
-
-  const actionDelete=()=>{
-    dispatch(deleteContent(contentIdDelete))
-    setOpenDeleteDialog(false)
-  }
-  
-
-  
+  // Loader أولي
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
       </div>
     );
   }
 
+  // لا توجد بيانات
   if (!items || items.length === 0) {
     return (
       <div className="text-center py-12">
@@ -135,23 +171,26 @@ if(id !==null){
   return (
     <div className="space-y-6">
       {items.map((item: any) => (
-        <ContentCard key={item.content.id} content={item} onInteract={handleInteract} onDelete={onDelete} />
+        <ContentCard
+          key={item.content.id}
+          content={item}
+          onInteract={handleInteract}
+          onDelete={onDelete}
+        />
       ))}
 
-      {hasMore && (
-        <div className="flex justify-center pt-6">
-          <Button onClick={loadMore} disabled={loadingMore} variant="outline" className="gap-2 bg-transparent">
-            {loadingMore ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                جاري التحميل...
-              </>
-            ) : (
-              "تحميل المزيد"
-            )}
-          </Button>
+      {/* مؤشر التحميل اللطيف */}
+      {loadingMore && (
+        <div className="flex justify-center py-6">
+          <div className="flex items-center gap-3 text-muted-foreground animate-pulse">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            <span className="text-sm">جاري تحميل المزيد...</span>
+          </div>
         </div>
       )}
+
+      {/* عنصر المراقبة للنهاية */}
+      {hasMore && <div ref={loadMoreRef} className="h-10" />}
 
       {!hasMore && items.length > 0 && (
         <div className="text-center py-6 text-muted-foreground text-sm">
@@ -159,13 +198,13 @@ if(id !==null){
         </div>
       )}
 
-
-<AlertDialog open={OpenDeleteDialog} onOpenChange={setOpenDeleteDialog}>
+      {/* Dialog حذف */}
+      <AlertDialog open={OpenDeleteDialog} onOpenChange={setOpenDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>تأكيد حذف المحتوى</AlertDialogTitle>
             <AlertDialogDescription>
-             هل انت متاكد من انك تريد حذف هذا المحتوى ؟
+              هل انت متاكد من انك تريد حذف هذا المحتوى ؟
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -178,7 +217,6 @@ if(id !==null){
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
     </div>
   );
 }

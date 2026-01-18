@@ -208,7 +208,7 @@ export function ContentCard({ content, onInteract, onDelete }: ContentCardProps)
     ? short.urlImage.startsWith("http")
       ? short.urlImage
       : `${urlRoot.replace(/\/$/, "")}/UploadFile/${encodeURIComponent(short.urlImage)}`
-    : "/diverse-user-avatars.png";
+    : "/diverse-user-avatars.jpg";
 
   const initial1 = short?.firstName?.[0] ?? short?.userName?.[0] ?? "ا";
   const initial2 = short?.lastName?.[0] ?? "";
